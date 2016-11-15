@@ -29,22 +29,19 @@ class Api::V1::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'registered user should be able to signup' do
-    post '/api/v1/users/sign_up', user: { name: 'testuser', email: 'testuser@email.com', 
-                                          password: '123456', password_confirmation: '123456' }
+    user = create(:user)
 
-    post '/api/v1/users/sign_in', user: { email: 'testuser@email.com', 'password': '123456' }
+    post '/api/v1/users/sign_in', user: { email: user.email, 'password': '123456' }
 
     res = JSON.parse(response.body)
 
-    assert_equal 'testuser@email.com', res['email']
-    assert_equal 'testuser', res['name']
+    assert_equal user.email, res['email']
+    assert_equal user.name, res['name']
     assert res['api_token']
   end
 
   test 'should not able to login if email or password didnt match' do
-    post '/api/v1/users/sign_up', user: { name: 'testuser', email: 'testuser@email.com', 
-                                          password: '123456', password_confirmation: '123456' }
-
+    create(:user)
     post '/api/v1/users/sign_in', user: { email: 'testuser@emal.com', 'password': '12345' }
 
     res = JSON.parse(response.body)

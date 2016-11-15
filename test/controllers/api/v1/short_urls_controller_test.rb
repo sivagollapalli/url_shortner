@@ -2,15 +2,11 @@ require 'test_helper'
 
 class Api::V1::ShortUrlsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    post '/api/v1/users/sign_up', user: { name: 'testuser', email: 'testuser@email.com', 
-                                          password: '123456', password_confirmation: '123456' }
-
-    @user = User.last
+    @user = create(:user)
   end
 
   test "should be able to list all short urls" do
-    post '/api/v1/short_urls', params: { short_url: { original_url: 'http://www.google.com' } }, 
-                               headers: { 'X-Extra-Header' => @user.api_token } 
+    create(:short_url, user: @user)
 
     get '/api/v1/short_urls',headers: { 'X-Extra-Header' => @user.api_token } 
 
@@ -28,20 +24,19 @@ class Api::V1::ShortUrlsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should geolocate short url" do
-    post '/api/v1/short_urls', params: { short_url: { original_url: 'http://www.google.com' } }, 
-                               headers: { 'X-Extra-Header' => @user.api_token } 
-
-    url = ShortUrl.last
+    url = create(:short_url, user: @user) 
 
     get "/api/v1/short_urls/#{url.id}", headers: { 'X-Extra-Header' => @user.api_token }, as: :json
 
     assert_equal 1, url.reload.visits.count
+    assert_equal 1, url.reload.visits_count
+
+    get "/api/v1/short_urls/#{url.id}", headers: { 'X-Extra-Header' => @user.api_token }, as: :json
+    assert_equal 2, url.reload.visits_count
   end
 
   test "should update short_url" do
-    post '/api/v1/short_urls', params: { short_url: { original_url: 'http://www.google.com' } }, 
-                               headers: { 'X-Extra-Header' => @user.api_token } 
-    url = ShortUrl.last
+    url = create(:short_url, user: @user) 
 
     put "/api/v1/short_urls/#{url.id}", params: { short_url: { original_url: 'http://www.yahoo.com' } }, 
                                           headers: { 'X-Extra-Header' => @user.api_token } 
@@ -50,9 +45,7 @@ class Api::V1::ShortUrlsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should destroy short_url" do
-    post '/api/v1/short_urls', params: { short_url: { original_url: 'http://www.google.com' } }, 
-                               headers: { 'X-Extra-Header' => @user.api_token } 
-    url = ShortUrl.last
+    url = create(:short_url, user: @user) 
 
     delete "/api/v1/short_urls/#{url.id}", headers: { 'X-Extra-Header' => @user.api_token } 
 
